@@ -23,6 +23,39 @@ Traditional traffic lights run on fixed timers, which wastes time and fuel when 
 | **PIC18F4550** | Dedicated servo/camera positioning controller — reads IR sensors, generates PWM to rotate the camera, displays current position on LCD |
 | **Raspberry Pi 4** | Central processing unit — image acquisition, OpenCV/TFLite vehicle detection, traffic light logic via GPIO |
 
+```mermaid
+flowchart LR
+    subgraph Intersection["Road Intersection"]
+        IR1[IR Sensor - Road 1]
+        IR2[IR Sensor - Road 2]
+        IR3[IR Sensor - Road 3]
+    end
+
+    subgraph PICUnit["PIC18F4550 - Servo Controller"]
+        F[PIC18F4550 MCU]
+        LCD[LCD - Position Display]
+    end
+
+    IR1 & IR2 & IR3 --> F
+    F -- PWM Signal --> G[Servo Motor]
+    F --> LCD
+    G -- Rotates 0 / 90 / 180 deg --> H[Pi Camera Module V2]
+
+    subgraph PiUnit["Raspberry Pi 4 - Central Processing Unit"]
+        H -- CSI Interface --> I[Frame Capture]
+        I --> J[OpenCV + TFLite\nVehicle Detection]
+        J --> K[Adaptive Green-Time\nLogic Engine]
+    end
+
+    K -- GPIO --> L[Traffic Light LEDs\nRed / Yellow / Green]
+    L --> M[Road Traffic]
+
+    K -.->|"future: analytics"| N[(Cloud / IoT Dashboard)]
+    N -.-> O[Traffic Authority]
+```
+
+*The PIC handles precise, time-critical servo positioning while the Pi handles compute-heavy vision processing and signal decision-making — kept as separate control loops rather than one shared MCU. The cloud/dashboard link is a future-scope extension (see [Future Scope](#-future-scope)).*
+
 The two controllers were deliberately decoupled (rather than run on a single MCU) to isolate the precision-timing task of servo control from the compute-heavy task of image processing.
 
 ---
@@ -142,8 +175,6 @@ Servo positioning and IR sensor logic were first validated in **MPLAB X IDE** be
 - Networked, city-wide adaptive intersections
 - Cloud/IoT dashboard for real-time traffic analytics
 
----
-
 ## 📄 References
 
 - [PIC18F4550 Datasheet — Microchip](https://www.microchip.com)
@@ -153,3 +184,7 @@ Servo positioning and IR sensor logic were first validated in **MPLAB X IDE** be
 - [UART Communication Protocol — Analog Devices](https://www.analog.com)
 
 ---
+
+## 📜 License
+
+This project was developed for academic purposes. Add a license (e.g., MIT) here if you intend to open-source it.
