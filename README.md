@@ -164,9 +164,3 @@ Servo positioning and IR sensor logic were first validated in **MPLAB X IDE** be
 - [UART Communication Protocol — Analog Devices](https://www.analog.com)
 
 ---
-
----
-
-## 📜 License
-
-This project was developed for academic purposes. Add a license (e.g., MIT) here if you intend to open-source it.
