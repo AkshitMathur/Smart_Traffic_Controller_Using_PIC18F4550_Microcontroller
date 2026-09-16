@@ -2,8 +2,6 @@
 
 An adaptive, real-time traffic signal control system built on a **Raspberry Pi + PIC18F4550** dual-microcontroller architecture, using computer vision (OpenCV / TFLite) to detect vehicle density and dynamically allocate green-light duration to the most congested lane.
 
-> Mini Project — Microcontrollers & Applications, Dept. of E&TC Engineering, Symbiosis Institute of Technology, Pune (July–December 2025)
-
 ---
 
 ## 📌 Overview
