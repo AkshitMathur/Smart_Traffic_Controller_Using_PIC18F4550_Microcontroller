@@ -112,26 +112,6 @@ Green-light duration scaling used in this prototype:
 
 ---
 
-## 📂 Repository Structure
-
-```
-smart-traffic-controller/
-├── firmware/
-│   └── servo_ir_control.c      # PIC18F4550 embedded C code
-├── raspberry-pi/
-│   ├── servo_ir_control.py     # IR-triggered servo positioning
-│   └── traffic_detection.py    # OpenCV/TFLite vehicle counting + LED control
-├── models/
-│   └── detect.tflite           # Object detection model
-├── docs/
-│   ├── block_diagram.png
-│   ├── circuit_images/
-│   └── project_report.pdf
-└── README.md
-```
-
----
-
 ## 🚀 Getting Started
 
 ### Raspberry Pi setup
