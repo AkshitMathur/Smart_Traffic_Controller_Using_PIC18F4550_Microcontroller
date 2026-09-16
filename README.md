@@ -1,121 +1,157 @@
 # 🚦 Smart Traffic Controller
 
-### Intelligent Traffic Density Monitoring and Adaptive Signal Control using PIC18F4550, Raspberry Pi and Computer Vision
+An adaptive, real-time traffic signal control system built on a **Raspberry Pi + PIC18F4550** dual-microcontroller architecture, using computer vision (OpenCV / TFLite) to detect vehicle density and dynamically allocate green-light duration to the most congested lane.
 
-<p align="center">
-  <b>
-    A hybrid embedded and computer-vision system for real-time vehicle detection,
-    traffic-density estimation and adaptive traffic signal control.
-  </b>
-</p>
-
-<p align="center">
-
-![PIC18F4550](https://img.shields.io/badge/MCU-PIC18F4550-blue)
-![Raspberry Pi](https://img.shields.io/badge/Platform-Raspberry%20Pi-red)
-![Embedded C](https://img.shields.io/badge/Embedded%20C-XC8-orange)
-![Python](https://img.shields.io/badge/Python-3.x-yellow)
-![OpenCV](https://img.shields.io/badge/Computer%20Vision-OpenCV-green)
-![TensorFlow Lite](https://img.shields.io/badge/ML-TensorFlow%20Lite-orange)
-![Project](https://img.shields.io/badge/Type-Embedded%20Systems-success)
-![Status](https://img.shields.io/badge/Status-Prototype%20Implemented-brightgreen)
-
-</p>
+> Mini Project — Microcontrollers & Applications, Dept. of E&TC Engineering, Symbiosis Institute of Technology, Pune (July–December 2025)
 
 ---
 
 ## 📌 Overview
 
-Conventional traffic signal systems commonly operate using predefined timing cycles, regardless of the actual traffic present on individual roads. This can result in inefficient signal utilization and unnecessary vehicle waiting.
+Traditional traffic lights run on fixed timers, which wastes time and fuel when roads are empty. This project replaces that with a **closed-loop, sensor-driven system**:
 
-**Smart Traffic Controller** is an academic engineering prototype that demonstrates an adaptive traffic-management approach using **embedded systems, computer vision and machine learning**.
-
-The system combines two computing layers:
-
-- **PIC18F4550** — handles low-level embedded control, IR sensor interfacing, PWM generation and servo-based camera positioning.
-- **Raspberry Pi** — performs camera acquisition, image processing, vehicle detection, vehicle counting and traffic-signal decision making.
-
-A **Pi Camera Module V2** is mounted on a servo motor and positioned toward different road directions. The Raspberry Pi processes the captured frames using **OpenCV and a TensorFlow Lite object-detection model**.
-
-Detected vehicles are counted and the vehicle count is used as an indicator of traffic density. The controller then selects a predefined green-light duration based on the detected traffic level.
-
-The project demonstrates the integration of:
-
-> **Embedded Systems + Sensors + PWM + Computer Vision + Machine Learning + Edge Computing + GPIO Control**
+1. **IR sensors** detect vehicle presence at each of three road directions on the intersection.
+2. The **PIC18F4550** drives a **servo motor** to rotate a Pi Camera to the corresponding direction (0°, 90°, 180°).
+3. The **Raspberry Pi** captures a frame, runs it through an **object detection model (TFLite)** to count vehicles, and computes the required green-light duration.
+4. The Pi drives traffic **LEDs directly via GPIO**, prioritizing the lane with the highest vehicle count.
+5. The cycle repeats, allowing the system to continuously adapt to changing traffic conditions.
 
 ---
 
-# 🎯 Objectives
+## 🏗️ System Architecture
 
-- Detect vehicles from live camera frames.
-- Estimate traffic density using detected vehicle count.
-- Interface IR sensors with the PIC18F4550.
-- Control a servo motor using PWM.
-- Position a camera toward multiple road directions.
-- Process camera frames using OpenCV.
-- Perform lightweight object detection using TensorFlow Lite.
-- Count detected vehicles.
-- Determine adaptive green-light duration.
-- Control traffic signal LEDs using Raspberry Pi GPIO.
-- Demonstrate integration between an 8-bit microcontroller and edge-computing platform.
+| Unit | Role |
+|---|---|
+| **PIC18F4550** | Dedicated servo/camera positioning controller — reads IR sensors, generates PWM to rotate the camera, displays current position on LCD |
+| **Raspberry Pi 4** | Central processing unit — image acquisition, OpenCV/TFLite vehicle detection, traffic light logic via GPIO |
+
+The two controllers were deliberately decoupled (rather than run on a single MCU) to isolate the precision-timing task of servo control from the compute-heavy task of image processing.
 
 ---
 
-# 🏛️ System Architecture
+## 🔧 Hardware Components
 
-```mermaid
-flowchart LR
+| Component | Qty | Purpose |
+|---|---|---|
+| PIC18F4550 Development Kit | 1 | Servo & IR sensor control |
+| Raspberry Pi 4 Model B | 1 | Image processing & traffic light control |
+| Pi Camera Module V2 (8MP) | 1 | Captures live traffic images |
+| Servo Motor (SG90/MG995) | 1 | Rotates camera to 0°/90°/180° |
+| IR Sensors | 4 | Vehicle presence detection |
+| LEDs (Red/Yellow/Green) | 12 | Traffic signal simulation |
+| Breadboard/PCB + wiring | — | Prototyping |
 
-    subgraph TRAFFIC["Traffic Intersection"]
-        A[IR Sensors]
-    end
+Full specs are in [`docs/appendix.md`](#) (operating voltages, response times, torque ratings, etc.).
 
-    subgraph PIC["PIC18F4550 - Embedded Control"]
-        B[IR Sensor Interface]
-        C[PWM Generation]
-        D[Servo Control]
-        E[16x2 LCD]
-    end
+---
 
-    subgraph CAMERA["Camera Positioning"]
-        F[Servo Motor]
-        G[Pi Camera Module V2]
-    end
+## 💻 Software Stack
 
-    subgraph PI["Raspberry Pi - Intelligent Processing"]
-        H[Image Acquisition]
-        I[OpenCV]
-        J[TensorFlow Lite]
-        K[Vehicle Detection]
-        L[Vehicle Counting]
-        M[Traffic Density Estimation]
-        N[Adaptive Signal Decision]
-    end
+- **Embedded C** (MPLAB X IDE) — PIC18F4550 firmware for IR sensing + PWM servo control
+- **Python 3** — Raspberry Pi control logic
+- **OpenCV** — frame preprocessing and visualization
+- **TFLite Runtime** — lightweight on-device vehicle detection
+- **RPi.GPIO** — LED and sensor interfacing
 
-    subgraph SIGNAL["Traffic Signal"]
-        O[Red LEDs]
-        P[Yellow LEDs]
-        Q[Green LEDs]
-    end
+---
 
-    A --> B
-    B --> C
-    C --> D
-    D --> F
-    F --> G
-
-    G --> H
-    H --> I
-    I --> J
-    J --> K
-    K --> L
-    L --> M
-    M --> N
-
-    N --> O
-    N --> P
-    N --> Q
-
-    B --> E
+## ⚙️ How It Works
 
 ```
+IR Sensor Triggered → PIC rotates camera to matching angle (PWM)
+        ↓
+Raspberry Pi captures frame via Pi Camera (CSI)
+        ↓
+TFLite model detects & counts vehicles in frame
+        ↓
+Green-light duration computed from vehicle count
+        ↓
+Raspberry Pi drives GPIO LEDs (green for busiest lane, red for others)
+        ↓
+Cycle repeats → system re-scans all directions
+```
+
+Green-light duration scaling used in this prototype:
+
+| Vehicles detected | Green duration |
+|---|---|
+| 1 | 3s |
+| 2 | 6s |
+| 3+ | 10s |
+
+---
+
+## 📂 Repository Structure
+
+```
+smart-traffic-controller/
+├── firmware/
+│   └── servo_ir_control.c      # PIC18F4550 embedded C code
+├── raspberry-pi/
+│   ├── servo_ir_control.py     # IR-triggered servo positioning
+│   └── traffic_detection.py    # OpenCV/TFLite vehicle counting + LED control
+├── models/
+│   └── detect.tflite           # Object detection model
+├── docs/
+│   ├── block_diagram.png
+│   ├── circuit_images/
+│   └── project_report.pdf
+└── README.md
+```
+
+---
+
+## 🚀 Getting Started
+
+### Raspberry Pi setup
+```bash
+sudo apt update && sudo apt install python3-opencv python3-pip
+pip3 install tflite-runtime RPi.GPIO
+python3 raspberry-pi/traffic_detection.py
+```
+
+### PIC18F4550 setup
+1. Open `firmware/servo_ir_control.c` in **MPLAB X IDE**.
+2. Compile with the XC8 compiler.
+3. Flash to the PIC18F4550 dev kit via PICkit/ICD programmer.
+
+---
+
+## 🧪 Simulation & Testing
+
+Servo positioning and IR sensor logic were first validated in **MPLAB X IDE** before hardware integration. OpenCV-based detection was tested standalone with LEDs simulating the traffic lights to confirm correct prioritization of the busiest lane before full assembly.
+
+---
+
+## ⚠️ Known Challenges
+
+- **Logic-level mismatch** — Raspberry Pi GPIO (3.3V) vs. PIC18F4550 (5V) caused unreliable direct UART communication; a level shifter is required for robust interfacing.
+- **UART resource conflict** — Using an Arduino Uno as a USB-to-serial bridge conflicted with the Pi's own USB-serial usage, leading to dropped data. A dedicated level-shifter IC (e.g., logic-level converter) is the recommended fix over a microcontroller relay.
+
+---
+
+## 📈 Applications
+
+- Urban intersection traffic management
+- Emergency vehicle priority routing (future scope)
+- Fuel/emissions reduction via reduced idling
+- Smart campus / smart city traffic automation
+
+## 🔭 Future Scope
+
+- Multi-class vehicle detection (car/bus/truck/two-wheeler) for weighted density scoring
+- Emergency vehicle recognition via siren/RFID/GPS
+- Networked, city-wide adaptive intersections
+- Cloud/IoT dashboard for real-time traffic analytics
+
+---
+
+## 📄 References
+
+- [PIC18F4550 Datasheet — Microchip](https://www.microchip.com)
+- [Raspberry Pi 4 Documentation](https://www.raspberrypi.com/documentation/computers/raspberry-pi.html)
+- [Pi Camera Module Documentation](https://www.raspberrypi.com/documentation/accessories/camera.html)
+- [OpenCV-Python Tutorials](https://docs.opencv.org/)
+- [UART Communication Protocol — Analog Devices](https://www.analog.com)
+
+---
